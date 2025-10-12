@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Rainfall Prediction Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: url('/static/bg_rain.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    h1 {
+      font-weight: 700;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    p {
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    /* Map */
+    #map {
+      height: 350px;
+      width: 90%;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.5);
+    }
+
+    /* Layer control text color */
+    .leaflet-control-layers {
+      color: #000 !important;
+    }
+    .leaflet-control-layers label {
+      color: #000 !important;
+      font-weight: 600;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(0,0,0,0.5);
+      padding: 15px 22px;
+      border-radius: 14px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+
+    label {
+      font-weight: 700; /* Bold labels */
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+
+    input[type="date"], input[type="number"] {
+      background-color: #fff;
+      color: #000;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      border: 2px solid #76448A;
+      transition: 0.3s;
+    }
+    input[type="date"]:focus, input[type="number"]:focus {
+      border-color: #8E44AD;
+      box-shadow: 0 0 10px rgba(142,68,173,0.6);
+    }
+
+    button {
+      background: linear-gradient(90deg, #5B2C6F, #8E44AD);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 10px 18px;
+      transition: 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #76448A, #9B59B6);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      #map { width: 95%; }
+      .controls { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🌦️ Rainfall Prediction Portal</h1>
+  <p>Select a location on the map and date range to predict rainfall</p>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <p id="location-display" style="font-size: 20px; background: black ; padding: 6px 12px; border-radius: 8px; margin-bottom: 15px;">Selected Location: </p>
+
+  <!-- Controls -->
+  <div class="controls">
+    <label>Latitude <input id="lat" type="number" step="0.0001" value="20.5937"></label>
+    <label>Longitude <input id="lng" type="number" step="0.0001" value="78.9629"></label>
+    <label>Start Date <input id="start" type="date"></label>
+    <label>End Date <input id="end" type="date"></label>
+    <button id="predictBtn">Predict</button>
+  </div>
+
+  <script>
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0,10);
+    document.getElementById('start').value = todayStr;
+    const end = new Date();
+    end.setDate(end.getDate()+5);
+    document.getElementById('end').value = end.toISOString().slice(0,10);
+
+    // Initialize Map
+    const map = L.map('map').setView([0,0], 2);
+
+    // Map Layers
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' });
+    const satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Satellite' });
+    const terrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Terrain' });
+
+    const baseLayers = { "OpenStreetMap": osm, "Satellite": satellite, "Terrain": terrain };
+    satellite.addTo(map); // Default layer
+    L.control.layers(baseLayers).addTo(map);
+
+    // Marker Handling
+    let marker;
+    map.on('click', function(e){
+      const {lat, lng} = e.latlng;
+      document.getElementById('lat').value = lat.toFixed(4);
+      document.getElementById('lng').value = lng.toFixed(4);
+      if(marker) marker.setLatLng(e.latlng);
+      else marker = L.marker(e.latlng).addTo(map);
+
+      // Fetch location name
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {headers: {'User-Agent': 'RainfallPredictionApp'}})
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('location-display').textContent = `Selected Location: ${data.display_name || 'Unknown'}`;
+        })
+        .catch(() => {
+          document.getElementById('location-display').textContent = 'Selected Location: Unknown';
+        });
+    });
+
+    // Predict Button
+    document.getElementById('predictBtn').addEventListener('click', async()=>{
+      const payload = {
+        lat: document.getElementById('lat').value,
+        lng: document.getElementById('lng').value,
+        start_date: document.getElementById('start').value,
+        end_date: document.getElementById('end').value
+      };
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const js = await res.json();
+      if(js.redirect) window.location.href = js.redirect;
+      else if(js.error) alert(js.error);
+    });
+  </script>
+</body>
+</html>

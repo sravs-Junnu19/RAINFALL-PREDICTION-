@@ -1,0 +1,5 @@
+- [x] Add location display element to index.html
+- [x] Modify map click event to fetch and display location name
+- [x] Test the changes by running the app and clicking on map
+- [x] Remove storm effect from results.html
+- [x] Add rainfall type classification to results page
