@@ -108,12 +108,27 @@ def predict():
         elif pred < 5: weather, icon = 'sunny','☀️'
         else: weather, icon = 'cloudy','☁️'
         predictions.append({'date': day.strftime('%Y-%m-%d'), 'rainfall': pred, 'rainfall_type': rainfall_type, 'weather': weather, 'icon': icon})
+    
+    # Generate farming suggestions based on rainfall types
+    rainfall_types = set(p['rainfall_type'] for p in predictions)
+    suggestions = []
+    if 'No rain' in rainfall_types:
+        suggestions.append("🌞 No rain expected: Consider irrigation systems or drought-resistant crops to maintain soil moisture.")
+    if 'Drizzle' in rainfall_types:
+        suggestions.append("🌦️ Drizzle expected: Light watering may suffice, but monitor for soil absorption.")
+    if 'Light rain' in rainfall_types:
+        suggestions.append("🌧️ Light rain expected: Good for gentle watering; avoid overwatering to prevent root rot.")
+    if 'Moderate rain' in rainfall_types:
+        suggestions.append("🌧️ Moderate rain expected: Beneficial for most crops; ensure proper drainage to avoid waterlogging.")
+    if 'Heavy rain' in rainfall_types:
+        suggestions.append("🌧️ Heavy rain expected: Prepare for potential waterlogging; improve drainage and protect crops from flooding.")
 
     wiki_link = f"https://en.wikipedia.org/wiki/{location.replace(' ', '_')}"
     session['results'] = {'predictions': predictions, 'location': location, 'wiki_link': wiki_link,
-                          'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+                          'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d'),
+                          'farming_suggestions': suggestions}
     return jsonify({'redirect': url_for('results')})
-
+        
 @app.route('/results')
 def results():
     results = session.get('results')

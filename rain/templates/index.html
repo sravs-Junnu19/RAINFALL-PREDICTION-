@@ -114,9 +114,34 @@
       transform: scale(1.05);
     }
 
+    /* Rain Facts Section */
+    .rain-facts {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      max-width: 90%;
+    }
+    .rain-facts h2 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .rain-facts ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .rain-facts li {
+      margin-bottom: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
     @media (max-width: 768px) {
       #map { width: 95%; }
       .controls { flex-direction: column; align-items: center; }
+      .rain-facts { max-width: 95%; }
     }
   </style>
 </head>
@@ -124,6 +149,17 @@
 <body>
   <h1>🌦️ Rainfall Prediction Portal</h1>
   <p>Select a location on the map and date range to predict rainfall</p>
+
+  <!-- Impressive Rain Facts Section -->
+  <div class="rain-facts">
+    <h2>Did You Know?</h2>
+    <ul>
+      <li>Rainfall covers about 71% of Earth's surface and is essential for life, providing water for drinking, agriculture, and ecosystems.</li>
+      <li>The wettest place on Earth is Mawsynram, India, receiving over 11,000 mm of rain annually.</li>
+      <li>Rain can influence weather patterns, climate change, and even human history through droughts and floods.</li>
+      <li>Every year, the Earth receives about 505,000 km³ of precipitation, enough to cover the planet in 10 meters of water if evenly distributed.</li>
+    </ul>
+  </div>
 
   <!-- Map -->
   <div id="map"></div>
